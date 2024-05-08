@@ -23,72 +23,81 @@ async def on_inline(event: events.CallbackQuery.Event):
     user_entity: types.User = await client.get_entity(event.original_update.user_id)
     query = event.data.decode('utf-8')
 
-    match query.split('_'):
-        case 'awards', *_:
-            tasklist = (client.db.tasks.find_one({'id': user_entity.id}) or {}).get('pending', [])
-            ignore = [i[0] for i in tasklist]
-            await client.send_message(user_entity,
-                                      client.lang.get_phrase_by_key(user_entity, 'awards_msg'),
-                                      buttons=views.tasks(user_entity, 
-                                                          ignore_adm=True, 
-                                                          ignore=[f'sn_{sn}' for sn in ignore]
-                                                          ) + views.settings(user_entity))
-        case 'task', *_:
-            tasklist = (client.db.tasks.find_one({'id': user_entity.id}) or {}).get('pending', [])
-            ignore = [i[0] for i in tasklist]
-            await client.send_message(user_entity,
-                                      client.lang.get_phrase_by_key(user_entity, 'tasks_msg'),
-                                      buttons=views.awards(user_entity))
-            await client.send_message(user_entity,
-                                      client.lang.get_phrase_by_key(user_entity, 'tasks_msg2'),
-                                      buttons=views.tasks(user_entity, 
-                                                          ignore_adm=True, 
-                                                          ignore=[f'sn_{sn}' for sn in ignore]
-                                                          ) + views.settings(user_entity))
-        case 'lang', selected_lang:
-            client.db.userlist.update_one({"id": user_entity.id}, {"$set": {"language": selected_lang}})
-            await client.send_message(user_entity,
-                                      client.lang.get_phrase_by_key(user_entity, 'lang_upd'))
-            
-            await event.delete()
-            await _start(client, user_entity)
-        case 'leaderboard', *_:
-            await _leaderboard(client, user_entity)
-        case 'tokenomics', *_:
-            await client.send_message(user_entity,
-                                      client.lang.get_phrase_by_key(user_entity, 'tokenomics_msg'),
-                                      file=client.assets.tokenomics)
-        case 'social', 'networks', *_:
-            await client.send_message(user_entity,
-                                      client.lang.get_phrase_by_key(user_entity, 'social_networks_msg'))
-        case 'contacts', *_:
-            await client.send_message(user_entity,
-                                      client.lang.get_phrase_by_key(user_entity, 'contacts_msg'))
-        case 'user', 'agreement', *_:
-            await client.send_message(user_entity,
-                                      client.lang.get_phrase_by_key(user_entity, 'user_agreement_msg'))
-        case _:
-            return
-
+    try:
+        match query.split('_'):
+            case 'awards', *_:
+                tasklist = (client.db.tasks.find_one({'id': user_entity.id}) or {}).get('pending', [])
+                ignore = [i[0] for i in tasklist]
+                await client.send_message(user_entity,
+                                        client.lang.get_phrase_by_key(user_entity, 'awards_msg'),
+                                        buttons=views.tasks(user_entity, 
+                                                            ignore_adm=True, 
+                                                            ignore=[f'sn_{sn}' for sn in ignore]
+                                                            ) + views.settings(user_entity))
+            case 'task', *_:
+                tasklist = (client.db.tasks.find_one({'id': user_entity.id}) or {}).get('pending', [])
+                ignore = [i[0] for i in tasklist]
+                await client.send_message(user_entity,
+                                        client.lang.get_phrase_by_key(user_entity, 'tasks_msg'),
+                                        buttons=views.awards(user_entity))
+                await client.send_message(user_entity,
+                                        client.lang.get_phrase_by_key(user_entity, 'tasks_msg2'),
+                                        buttons=views.tasks(user_entity, 
+                                                            ignore_adm=True, 
+                                                            ignore=[f'sn_{sn}' for sn in ignore]
+                                                            ) + views.settings(user_entity))
+            case 'lang', selected_lang:
+                client.db.userlist.update_one({"id": user_entity.id}, {"$set": {"language": selected_lang}})
+                await client.send_message(user_entity,
+                                        client.lang.get_phrase_by_key(user_entity, 'lang_upd'))
+                
+                await event.delete()
+                await _start(client, user_entity)
+            case 'leaderboard', *_:
+                await _leaderboard(client, user_entity)
+            case 'tokenomics', *_:
+                await client.send_message(user_entity,
+                                        client.lang.get_phrase_by_key(user_entity, 'tokenomics_msg'),
+                                        file=client.assets.tokenomics)
+            case 'social', 'networks', *_:
+                await client.send_message(user_entity,
+                                        client.lang.get_phrase_by_key(user_entity, 'social_networks_msg'))
+            case 'contacts', *_:
+                await client.send_message(user_entity,
+                                        client.lang.get_phrase_by_key(user_entity, 'contacts_msg'))
+            case 'user', 'agreement', *_:
+                await client.send_message(user_entity,
+                                        client.lang.get_phrase_by_key(user_entity, 'user_agreement_msg'))
+            case _:
+                return
+    except errors.FilePart0MissingError: 
+        await client.uploads()
+        await on_inline(event)
+    except Exception:
+        traceback.print_exc()
 
 @events.register(events.NewMessage())
 async def on_msg(event: types.Message):
-    user_entity = await event.client.get_entity(event.peer_id)
+    client: ClientType = event.client
+    user_entity = await client.get_entity(event.peer_id)
     try:
         await _handle_command(event)
     except errors.common.AlreadyInConversationError:
-        convs = event.client._conversations.get(user_entity.id)
+        convs = client._conversations.get(user_entity.id)
         if convs:
             for conv in convs:
                 await conv.cancel_all()
 
-        await _handle_command(event) 
+        await _handle_command(event)
+    except errors.FilePart0MissingError: 
+        await client.uploads(client)
+        await on_msg(event)
     except Exception:
         traceback.print_exc()
 
-        await event.client.send_message(
+        await client.send_message(
             event.chat_id,
-            event.client.lang.get_phrase_by_key(user_entity, 'error'),
+            client.lang.get_phrase_by_key(user_entity, 'error'),
             buttons=views.main(user_entity)
         )
 
@@ -99,16 +108,24 @@ async def _handle_command(event: events.NewMessage.Event):
     user_entity = await client.get_entity(event.peer_id)
 
     # Check subsctiptions
-    #if not await _has_joined(client, user_entity):
-        #await client.send_message(user_entity,
-                                  #client.lang.get_phrase_by_key(user_entity, 'check_channel'),
-                                  #buttons=views.channels(user_entity))
-        #return
+    if not await _has_joined(client, user_entity):
+        if text.startswith('/start'):
+            _, *ref = text.split(' ')
+            if ref != [] and\
+                    int(ref[0][1:]) != user_entity.id and\
+                    not client.db.userlist.find_one({'id': user_entity.id}): # IS a referal
+                client.db.referals.insert_one({
+                    'referal': user_entity.id,  # Who is a referal
+                    'referrer': int(ref[0][1:])  # Whose link was used
+                })
+
+        await client.send_message(user_entity,
+                                  client.lang.get_phrase_by_key(user_entity, 'check_channel'),
+                                  buttons=views.channels(user_entity))
+        return
 
     if text.startswith('/start'):
-        _, *ref = text.split(' ')
-        if ref != []: # IS a referal
-            await _append_ref(client, user_entity, int(ref[0][1:]))
+        await _append_ref(client, user_entity)
         
         await _start(client, user_entity)
         return
@@ -161,13 +178,19 @@ async def _start(client: ClientType, user_entity: types.User):
                               buttons=views.main(user_entity))
 
 
-async def _append_ref(client: ClientType, user_entity: types.User, ref_id: int):
+async def _append_ref(client: ClientType, user_entity: types.User):
      # if this user already exists or is himself(they're on userlist then, anyways), then they're not referal
+    db_entry = client.db.referals.find_one({'referal': user_entity.id})
+    if not db_entry:
+        return
+    
+    ref_id = db_entry.get('referrer')
     if ref_id == user_entity.id or client.db.userlist.find_one({'id': user_entity.id}):
         return
     
     client.db.userlist.update_one({'id': ref_id}, 
                                   {'$push': {'referals': user_entity.id}})
+    client.db.referals.delete_one({'referal': user_entity.id})
     referral = await client.get_entity(ref_id)
     await client.send_message(
         referral,

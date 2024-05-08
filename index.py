@@ -19,19 +19,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s - %(na
 logger = logging.getLogger('index')
 
 
-def init() -> ClientType:
-    client: ClientType = TelegramClient('main', os.getenv('API_ID'), os.getenv('API_HASH'))
-
-    client.assets = SimpleNamespace()
-    client.db = database
-    client.lang = lang_handler
-
-    logger.info('Telegram client initialized and database attached, starting...')
-    client = client.start(bot_token=os.getenv('BOT_TOKEN'))
-
-    return client
-
-
 async def uploads(client: ClientType):
     client.assets.welcome = await client.upload_file('assets/welcome.jpg') 
     client.assets.terms = await client.upload_file('assets/terms.jpg') 
@@ -44,6 +31,20 @@ async def uploads(client: ClientType):
         await client.get_entity(i)
         for i in os.getenv('SUB_CHANNELS').split(',')
     ]
+
+
+def init() -> ClientType:
+    client: ClientType = TelegramClient('main2', os.getenv('API_ID'), os.getenv('API_HASH'))
+
+    client.assets = SimpleNamespace()
+    client.db = database
+    client.lang = lang_handler
+    client.uploads = uploads
+
+    logger.info('Telegram client initialized and database attached, starting...')
+    client = client.start(bot_token=os.getenv('BOT_TOKEN'))
+
+    return client
 
 
 async def notify_admin(client: ClientType, message: str):
@@ -60,11 +61,12 @@ if __name__ == '__main__':
             client.add_event_handler(val)
 
     with client:
-        client.loop.run_until_complete(uploads(client))
-        client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
+        client.loop.run_until_complete(client.uploads(client))
+        # client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
+        client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
         client.run_until_disconnected()
 
     client.start(bot_token=os.getenv('BOT_TOKEN'))
-    client.loop.run_until_complete(notify_admin(client, 'The bot has shut down'))
+    # client.loop.run_until_complete(notify_admin(client, 'The bot has shut down'))
     client.disconnect()
 

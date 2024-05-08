@@ -68,6 +68,7 @@ class Database(pymongo.MongoClient):
         self.userlist = self.users.list
         self.admins: dict[str, int] = {i['username']:i['id'] for i in self.users.admins.find()}
         self.tasks = self.users.tasks
+        self.referals = self.users.referals
 
         logger.info('Admin IDs parsed, proceeding ...')
 

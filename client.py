@@ -1,3 +1,5 @@
+from abc import abstractmethod
+
 from types import SimpleNamespace
 from telethon import TelegramClient
 from telethon.types import Channel
