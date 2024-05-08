@@ -1,0 +1,169 @@
+{
+    sub_channel_1: SUB1
+    sub_channel_2: SUB2
+    time_out: Time's up!
+    terms: Terms 📋
+    wallet: Wallet 💳
+    wallet_enter: 'Enter your wallet address in TON network:'
+    balance: Balance 💵
+    settings: Settings ⚙️
+    back: 🔙Back
+    lang_upd: Language updated!
+    error: Error occured! Please, try again.
+    awards: Awards📊
+    info: Info ℹ️
+    invite: Invite friend 👥
+    tasks: Tasks 📈
+    leaderboard: Leaderboard 🏆
+    no_wallet: __not linked__
+    tokenomics: Tokenomics
+    contacts: Contacts
+    social_networks: Social networks
+    sn_insta: Instagram
+    sn_tiktok: TikTok
+    sn_vk: VK
+    sn_telegram: Telegram
+    sn_other: Other
+    sn_msg: 
+    '''
+    Send the link to the publication:
+    '''
+    sn_check:
+    '''
+    Contact the technical support to learn the possibility of completing the task in an uncounted social network.
+    '''
+    sn_accepted:
+    '''
+    Your post has been accepted for processing, expect a response within 72 hours. 
+    You will not be able to select this social network for completion during the verification.
+    '''
+    check_channel:
+    '''
+    To work with the bot, you must first subscribe to the channels!
+    '''
+    referral: 
+    '''
+    Congratulations! A person clicked through your referral link. 
+
+    Your balance has been credited with __10 $RLSGM__!
+    '''
+    welcome:
+    '''
+    **Attention** to all crypto-lions and real machos! Catch the fat **"Sigma TON" AIRDROP**!
+
+    Let's tear it off big for true crypto friends and alphas with a wallet heavier than a nuclear briefcase! 
+    This aerial attack of tokens will break through the cryptocurrency market!
+
+    __Prepare beer barrels - **"Sigma TON"** airdrop will be epic! **Let's find the TON for you!**__
+    '''
+    balance_msg: 
+    '''
+    __**Your balance:**__
+
+    Total: %(total_balance)s $RLSGM 
+    From referrals: %(ref_balance)s $RLSGM 
+    For tasks: %(tasks_balance)s $RLSGM 
+    '''
+    tasks_msg: 
+    '''
+    Instagram Facebook, Twitter, Instagram, VK, Telegram, etc.) you receive from 10 to 50 tokens of $RLSGM for each publication about SIGMA TON on popular social networks.😳
+
+    To receive a reward, your publication must meet the following conditions:❗️
+
+    1. The post should contain a link to the official telegram channel SIGMA TON @SIGMATONCOIN
+
+    2. The post must be public and viewable by other users. 
+
+    3. The publication should contain information about the SIGMA TON project, its features, advantages, or the latest news.
+
+    4. The post must not contain defamation or inappropriate content.
+
+    To receive an airdrop, you need to provide a link to your publication in our telegram bot. After moderation, RLSGM tokens will be credited to your balance within 72 hours.🥸
+
+    The more actively you post interesting content about SIGMA TON, the more tokens you can earn. Together we will make our token popular and recognizable throughout the crypto community!❤️
+    '''
+    tasks_msg2:
+    '''
+    Select the social network to complete the task.
+    '''
+    terms_msg: 
+    '''
+    Cool conditions for getting a SIGMA TON airdrop worthy of real crypto-alphas?😎
+
+    For each invited friend to the SIGMA TON system, you receive 10 RLSGM tokens as a reward. 💸
+
+    The maximum number of referrals is unlimited - the more friends you bring, the more RLSGM tokens you can earn. Invite your loved ones, colleagues, and like-minded people - together we will make SIGMA TON the largest token on the TON network
+
+    We appreciate your activity and support from the SIGMA TON community. Thanks to your efforts, each new user strengthens our token and develops the crypto industry as a whole.😘
+    '''
+    wallet_msg: 
+    '''
+    **Your wallet:** %(wallet)s
+
+    You need to link a **NON-CUSTODIAL** TON network wallet 
+
+    `A non-custodial wallet is a wallet in which the user has full control over their private keys and the security of their cryptocurrency assets`
+
+    For example: __Tonkeeper/Tonhub/MyTonWallet__
+    '''
+    info_msg:
+    '''
+    SIGMATRON AIRDROP is a project that offers you free tokens as part of the "airdrop" program. In this case, the airdrop is offered for the $RLSGM token. 
+
+    As part of the airdrop, you can get $RLSGM tokens for free. To receive free tokens, you must complete certain tasks, such as subscribing to the project's social networks, attracting new users, or performing other simple actions. After completing the tasks, you will receive free $RLS GM tokens, which you can use at your discretion.
+
+    It is important to remember that airdrop has a limited duration and availability. In order not to miss new epochs, we recommend that you follow the official channels of the project [SIGMA TON](https://t.me/SIGMATONCOIN)
+
+    You can find out all the additional information about the project below.
+    '''
+    awards_msg:
+    '''
+    VK:
+    Profile post - 5 $RLSGM 
+    Profile History - $ 5RLSGM 
+    Clip - from 5 to 10 $RLSGM
+    A post in your group - from 10 to 50 $RLSGM 
+
+    Telegram :
+    A post in your channel - from 10 to 50 $RLSGM 
+    Profile history - 10 $RLSGM 
+    Put $RLSGM in the nickname - 5 $RLSGM
+    Add a link to SIGMADropbot to the profile description - 5 $RLSGM  
+
+    Tik Tok:
+    Videos in Tik Tok - from 10 to 50 $RLSGM  
+
+    Twitter:
+    Profile Post - 5 $RLSGM
+
+    Instagram:
+    Profile Post - 5 $RLSGM
+    Profile history - 10 $RLSGM
+    '''
+    tokenomics_msg:
+    '''
+    Here are the main aspects of the tokenomics of the $RLSGM token:
+    '''
+    social_networks_msg:
+    '''
+    RU channel: https://t.me/SIGMATONCOIN
+
+    ENG channel: https://t.me/SIGMADropENG
+    '''
+    contacts_msg:
+    '''
+    Administration: 
+    @ownerRealSIGMA - Founder of the project 
+    @SigmaHelperS - Support Agent, Moderator
+    '''
+    user_agreement: User agreement
+    user_agreement_msg:
+    '''
+    RUS - [Пользовательское соглашение](https://teletype.in/@ownerrealsigma/pOk4OkDu77q)
+    ENG - [User agreement](https://teletype.in/@ownerrealsigma/-krsHgyFAR5)
+    '''
+    awards_checked:
+    '''
+    Congratulations, your assignment has been verified, and %(awarded)s $RLSGM have been credited to your account!
+    '''
+}
