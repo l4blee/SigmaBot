@@ -132,7 +132,6 @@ async def _handle_command(event: events.NewMessage.Event):
     
     if text == 'Админ панель' and user_entity.id in client.db.admins.values():
         await _admin_panel(client, user_entity)
-        # await _admin_spam(client, user_entity)
         return
     
     if text == 'Массовая рассылка' and user_entity.id in client.db.admins.values():
