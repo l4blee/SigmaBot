@@ -99,11 +99,11 @@ async def _handle_command(event: events.NewMessage.Event):
     user_entity = await client.get_entity(event.peer_id)
 
     # Check subsctiptions
-    if not await _has_joined(client, user_entity):
-        await client.send_message(user_entity,
-                                  client.lang.get_phrase_by_key(user_entity, 'check_channel'),
-                                  buttons=views.channels(user_entity))
-        return
+    #if not await _has_joined(client, user_entity):
+        #await client.send_message(user_entity,
+                                  #client.lang.get_phrase_by_key(user_entity, 'check_channel'),
+                                  #buttons=views.channels(user_entity))
+        #return
 
     if text.startswith('/start'):
         _, *ref = text.split(' ')
