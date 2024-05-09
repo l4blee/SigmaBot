@@ -5,7 +5,6 @@ from dataclasses import dataclass, field
 from typing import Any, Sequence, Type
 
 import pymongo
-from motor import motor_asyncio
 from telethon.types import User
 from bson.codec_options import TypeRegistry
 
