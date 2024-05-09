@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     with client:
         client.loop.run_until_complete(client.uploads(client))
-        # client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
-        client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
+        client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
+        # client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
         client.run_until_disconnected()
 
