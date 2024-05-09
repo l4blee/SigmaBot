@@ -107,17 +107,16 @@ async def _handle_command(event: events.NewMessage.Event):
     user_entity = await client.get_entity(event.peer_id)
 
     # Check subsctiptions
+    if text.startswith('/start'):
+        _, *ref = text.split(' ')
+        if ref != [] and\
+                int(ref[0][1:]) != user_entity.id and\
+                not client.db.userlist.find_one({'id': user_entity.id}): # IS a referal
+            client.db.referals.insert_one({
+                'referal': user_entity.id,  # Who is a referal
+                'referrer': int(ref[0][1:])  # Whose link was used
+            })
     if not await _has_joined(client, user_entity):
-        if text.startswith('/start'):
-            _, *ref = text.split(' ')
-            if ref != [] and\
-                    int(ref[0][1:]) != user_entity.id and\
-                    not client.db.userlist.find_one({'id': user_entity.id}): # IS a referal
-                client.db.referals.insert_one({
-                    'referal': user_entity.id,  # Who is a referal
-                    'referrer': int(ref[0][1:])  # Whose link was used
-                })
-
         await client.send_message(user_entity,
                                   client.lang.get_phrase_by_key(user_entity, 'check_channel'),
                                   buttons=views.channels(user_entity))
