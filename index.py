@@ -20,9 +20,9 @@ logger = logging.getLogger('index')
 
 
 async def uploads(client: ClientType):
-    client.assets.welcome = await client.upload_file('assets/welcome.jpg') 
-    client.assets.terms = await client.upload_file('assets/terms.jpg') 
-    client.assets.wallet = await client.upload_file('assets/wallet.jpg') 
+    client.assets.start = await client.upload_file('assets/start.jpg')
+    client.assets.terms = await client.upload_file('assets/terms.jpg')
+    client.assets.wallet = await client.upload_file('assets/wallet.jpg')
     client.assets.balance = await client.upload_file('assets/balance.jpg')
     client.assets.leaderboard = await client.upload_file('assets/leaderboard.jpg')
     client.assets.tokenomics = await client.upload_file('assets/tokenomics.jpg')

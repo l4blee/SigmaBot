@@ -21,7 +21,7 @@ logger = logging.getLogger('handlers')
 async def on_inline(event: events.CallbackQuery.Event):
     client: ClientType = event.client
     user_entity: types.User = await client.get_entity(event.original_update.user_id)
-    query = event.data.decode('utf-8')
+    query: str = event.data.decode('utf-8')
 
     try:
         match query.split('_'):
@@ -29,27 +29,27 @@ async def on_inline(event: events.CallbackQuery.Event):
                 tasklist = (client.db.tasks.find_one({'id': user_entity.id}) or {}).get('pending', [])
                 ignore = [i[0] for i in tasklist]
                 await client.send_message(user_entity,
-                                        client.lang.get_phrase_by_key(user_entity, 'awards_msg'),
-                                        buttons=views.tasks(user_entity, 
-                                                            ignore_adm=True, 
-                                                            ignore=[f'sn_{sn}' for sn in ignore]
-                                                            ) + views.settings(user_entity))
+                                          client.lang.get_phrase_by_key(user_entity, 'awards_msg'),
+                                          buttons=views.tasks(user_entity, 
+                                                              ignore_adm=True, 
+                                                              ignore=[f'sn_{sn}' for sn in ignore]
+                                                              ) + views.settings(user_entity))
             case 'task', *_:
                 tasklist = (client.db.tasks.find_one({'id': user_entity.id}) or {}).get('pending', [])
                 ignore = [i[0] for i in tasklist]
                 await client.send_message(user_entity,
-                                        client.lang.get_phrase_by_key(user_entity, 'tasks_msg'),
-                                        buttons=views.awards(user_entity))
+                                          client.lang.get_phrase_by_key(user_entity, 'tasks_msg'),
+                                          buttons=views.awards(user_entity))
                 await client.send_message(user_entity,
-                                        client.lang.get_phrase_by_key(user_entity, 'tasks_msg2'),
-                                        buttons=views.tasks(user_entity, 
-                                                            ignore_adm=True, 
-                                                            ignore=[f'sn_{sn}' for sn in ignore]
-                                                            ) + views.settings(user_entity))
+                                          client.lang.get_phrase_by_key(user_entity, 'tasks_msg2'),
+                                          buttons=views.tasks(user_entity, 
+                                                              ignore_adm=True, 
+                                                              ignore=[f'sn_{sn}' for sn in ignore]
+                                                              ) + views.settings(user_entity))
             case 'lang', selected_lang:
                 client.db.userlist.update_one({"id": user_entity.id}, {"$set": {"language": selected_lang}})
                 await client.send_message(user_entity,
-                                        client.lang.get_phrase_by_key(user_entity, 'lang_upd'))
+                                          client.lang.get_phrase_by_key(user_entity, 'lang_upd'))
                 
                 await event.delete()
                 await _start(client, user_entity)
@@ -57,21 +57,23 @@ async def on_inline(event: events.CallbackQuery.Event):
                 await _leaderboard(client, user_entity)
             case 'tokenomics', *_:
                 await client.send_message(user_entity,
-                                        client.lang.get_phrase_by_key(user_entity, 'tokenomics_msg'),
-                                        file=client.assets.tokenomics)
+                                          client.lang.get_phrase_by_key(user_entity, 'tokenomics_msg'),
+                                          file=client.assets.tokenomics)
             case 'social', 'networks', *_:
                 await client.send_message(user_entity,
-                                        client.lang.get_phrase_by_key(user_entity, 'social_networks_msg'))
+                                          client.lang.get_phrase_by_key(user_entity, 'social_networks_msg'))
             case 'contacts', *_:
                 await client.send_message(user_entity,
-                                        client.lang.get_phrase_by_key(user_entity, 'contacts_msg'))
+                                          client.lang.get_phrase_by_key(user_entity, 'contacts_msg'))
             case 'user', 'agreement', *_:
                 await client.send_message(user_entity,
-                                        client.lang.get_phrase_by_key(user_entity, 'user_agreement_msg'))
+                                          client.lang.get_phrase_by_key(user_entity, 'user_agreement_msg'))
             case _:
                 return
-    except errors.FilePart0MissingError: 
-        await client.uploads()
+    except errors.FilePart0MissingError:
+        # query is the cmd here, as language handling has no images
+        # so these are: leaderboard and tokenomics
+        client.assets.__setattr__(query, await client.upload_file(f"assets/{query}.jpg"))
         await on_inline(event)
     except Exception:
         traceback.print_exc()
@@ -89,9 +91,6 @@ async def on_msg(event: types.Message):
                 await conv.cancel_all()
 
         await _handle_command(event)
-    except errors.FilePart0MissingError: 
-        await client.uploads(client)
-        await on_msg(event)
     except Exception:
         traceback.print_exc()
 
@@ -130,6 +129,7 @@ async def _handle_command(event: events.NewMessage.Event):
         await _start(client, user_entity)
         return
     
+    # No images here
     if text == 'Админ панель' and user_entity.id in client.db.admins.values():
         await _admin_panel(client, user_entity)
         return
@@ -146,11 +146,16 @@ async def _handle_command(event: events.NewMessage.Event):
     if cmd is None:
         return
     
-    match cmd.split('_'):
-        case 'sn', social_network:
-            await _handle_snetwork(client, user_entity, social_network)
-        case _: # Otherwise
-            await eval(f'_{cmd}')(client, user_entity)  # TODO: port to CLIENT, USER args
+    # Have images here, need try/except
+    try:
+        match cmd.split('_'):
+            case 'sn', social_network:
+                await _handle_snetwork(client, user_entity, social_network)
+            case _: # Otherwise
+                await eval(f'_{cmd}')(client, user_entity)
+    except errors.FilePart0MissingError:
+        client.assets.__setattr__(cmd, await client.upload_file(f"assets/{cmd}.jpg"))
+        await _handle_command(event)
 
 
 async def _has_joined(client: ClientType, user_entity: types.User) -> bool:
