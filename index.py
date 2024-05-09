@@ -19,15 +19,20 @@ from database import database
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s - %(name)s - %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger('index')
 
+async def upload_asset(client: ClientType, path: str):
+    client.assets.__setattr__(path, await client.upload_file(f'assets/{path}.jpg'))
+
 
 async def uploads(client: ClientType):
+    await client.db.parse_adm()
+
     asyncio.gather(
-        client.upload_file('assets/start.jpg'),
-        client.upload_file('assets/terms.jpg'),
-        client.upload_file('assets/wallet.jpg'),
-        client.upload_file('assets/balance.jpg'),
-        client.upload_file('assets/leaderboard.jpg'),
-        client.upload_file('assets/tokenomics.jpg')
+        upload_asset(client, 'start'),
+        upload_asset(client, 'terms'),
+        upload_asset(client, 'wallet'),
+        upload_asset(client, 'balance'),
+        upload_asset(client, 'leaderboard'),
+        upload_asset(client, 'tokenomics')
     )
 
     client.subscribe_channels = [

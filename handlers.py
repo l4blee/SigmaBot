@@ -160,8 +160,8 @@ async def _handle_command(event: events.NewMessage.Event):
 
 async def _has_joined(client: ClientType, user_entity: types.User) -> bool:
     try:
-        for i in client.subscribe_channels:
-            await client.get_permissions(i, user_entity)
+        coroutines = [client.get_permissions(i, user_entity) for i in client.subscribe_channels]
+        await asyncio.gather(*coroutines)
 
         return True
     except errors.UserNotParticipantError:
@@ -177,7 +177,7 @@ async def _start(client: ClientType, user_entity: types.User):
         logger.info(f"Created new user: {uform.toJSON()}")
 
     await client.send_message(user_entity, 
-                              client.lang.get_phrase_by_key(user_entity, 'welcome'), 
+                              client.lang.get_phrase_by_key(user_entity, 'start'), 
                               file=client.assets.start,
                               buttons=views.main(user_entity))
 
@@ -285,8 +285,8 @@ async def _settings(client: ClientType, user_entity: types.User):
 async def _back(client: ClientType, user_entity: types.User):
     convs = client._conversations.get(user_entity.id)
     if convs:
-        for conv in convs:
-            await conv.cancel_all()
+        coroutines = [conv.cancel_all() for conv in convs]
+        await asyncio.gather(*coroutines)
 
     await _start(client, user_entity)
 

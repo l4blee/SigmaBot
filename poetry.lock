@@ -24,6 +24,27 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "motor"
+version = "3.4.0"
+description = "Non-blocking MongoDB driver for Tornado or asyncio"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+pymongo = ">=4.5,<5"
+
+[package.extras]
+aws = ["pymongo[aws] (>=4.5,<5)"]
+encryption = ["pymongo[encryption] (>=4.5,<5)"]
+gssapi = ["pymongo[gssapi] (>=4.5,<5)"]
+ocsp = ["pymongo[ocsp] (>=4.5,<5)"]
+snappy = ["pymongo[snappy] (>=4.5,<5)"]
+srv = ["pymongo[srv] (>=4.5,<5)"]
+test = ["pytest (>=7)", "mockupdb", "tornado (>=5)", "aiohttp (!=3.8.6)", "motor"]
+zstd = ["pymongo[zstd] (>=4.5,<5)"]
+
+[[package]]
 name = "pyaes"
 version = "1.6.1"
 description = "Pure-Python Implementation of the AES block-cipher and common modes of operation"
@@ -99,11 +120,12 @@ cryptg = ["cryptg"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "78ac18e5325ee4c1b88bcf817e03eefd8f51f13b32f2df017a77f724aee082be"
+content-hash = "cf1eab398e2e87accf4803ee58dbade025a6e1aa6cf8b4195b53fa65616c0050"
 
 [metadata.files]
 dnspython = []
 hjson = []
+motor = []
 pyaes = []
 pyasn1 = []
 pymongo = []
