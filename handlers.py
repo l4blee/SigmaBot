@@ -122,14 +122,6 @@ async def _handle_command(event: events.NewMessage.Event):
                                   client.lang.get_phrase_by_key(user_entity, 'check_channel'),
                                   buttons=views.channels(user_entity))
         return
-
-    try:
-        if text.startswith('/start'):
-            await _start(client, user_entity)
-            return
-    except errors.FilePart0MissingError:
-        client.assets.__setattr__(cmd, await client.upload_file(f"assets/{cmd}.jpg"))
-        await _handle_command(event)
     
     # No images here
     if text == 'Админ панель' and user_entity.id in client.db.admins.values():
@@ -148,7 +140,7 @@ async def _handle_command(event: events.NewMessage.Event):
         cmd = 'start'
     else:
         cmd = client.lang.get_key_by_phrase(user_entity, text)
-        
+
     if cmd is None:
         return
     
