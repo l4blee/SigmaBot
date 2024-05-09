@@ -154,6 +154,8 @@ async def _handle_command(event: events.NewMessage.Event):
             case _: # Otherwise
                 await eval(f'_{cmd}')(client, user_entity)
     except errors.FilePart0MissingError:
+        if cmd == 'back':
+            cmd = 'start'
         client.assets.__setattr__(cmd, await client.upload_file(f"assets/{cmd}.jpg"))
         await _handle_command(event)
 
