@@ -125,8 +125,6 @@ async def _handle_command(event: events.NewMessage.Event):
 
     try:
         if text.startswith('/start'):
-            await _append_ref(client, user_entity)
-            
             await _start(client, user_entity)
             return
     except errors.FilePart0MissingError:
@@ -146,7 +144,11 @@ async def _handle_command(event: events.NewMessage.Event):
         await _check_tasks(client, user_entity)
         return
     
-    cmd = client.lang.get_key_by_phrase(user_entity, text)
+    if text.startswith('/start'):
+        cmd = 'start'
+    else:
+        cmd = client.lang.get_key_by_phrase(user_entity, text)
+        
     if cmd is None:
         return
     
@@ -174,6 +176,8 @@ async def _has_joined(client: ClientType, user_entity: types.User) -> bool:
         return False
 
 async def _start(client: ClientType, user_entity: types.User):
+    await _append_ref(client, user_entity)
+
     entry = client.db.userlist.find_one({"id": user_entity.id})
     if entry is None:
         uform = DBUser(user_entity.id, 
