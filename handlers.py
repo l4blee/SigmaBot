@@ -178,7 +178,7 @@ async def _start(client: ClientType, user_entity: types.User):
 
     await client.send_message(user_entity, 
                               client.lang.get_phrase_by_key(user_entity, 'welcome'), 
-                              file=client.assets.welcome,
+                              file=client.assets.start,
                               buttons=views.main(user_entity))
 
 
