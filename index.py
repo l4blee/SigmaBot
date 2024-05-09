@@ -1,9 +1,9 @@
-import asyncio
 import dotenv; dotenv.load_dotenv('.env')
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s - %(name)s - %(message)s', datefmt='%H:%M:%S')
 
+import asyncio
 import inspect
 import os
 from types import SimpleNamespace
@@ -70,6 +70,7 @@ if __name__ == '__main__':
 
     with client:
         client.loop.run_until_complete(client.uploads(client))
-        # client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
-        client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
+        client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
+        # client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
         client.run_until_disconnected()
+
