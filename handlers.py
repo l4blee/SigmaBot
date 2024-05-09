@@ -123,11 +123,15 @@ async def _handle_command(event: events.NewMessage.Event):
                                   buttons=views.channels(user_entity))
         return
 
-    if text.startswith('/start'):
-        await _append_ref(client, user_entity)
-        
-        await _start(client, user_entity)
-        return
+    try:
+        if text.startswith('/start'):
+            await _append_ref(client, user_entity)
+            
+            await _start(client, user_entity)
+            return
+    except errors.FilePart0MissingError:
+        client.assets.__setattr__(cmd, await client.upload_file(f"assets/{cmd}.jpg"))
+        await _handle_command(event)
     
     # No images here
     if text == 'Админ панель' and user_entity.id in client.db.admins.values():
@@ -179,7 +183,7 @@ async def _start(client: ClientType, user_entity: types.User):
         logger.info(f"Created new user: {uform.toJSON()}")
 
     await client.send_message(user_entity, 
-                              client.lang.get_phrase_by_key(user_entity, 'welcome'), 
+                              client.lang.get_phrase_by_key(user_entity, 'start'), 
                               file=client.assets.start,
                               buttons=views.main(user_entity))
 
