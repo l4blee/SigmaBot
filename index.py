@@ -1,3 +1,4 @@
+import asyncio
 import dotenv; dotenv.load_dotenv('.env')
 import logging
 
@@ -20,12 +21,14 @@ logger = logging.getLogger('index')
 
 
 async def uploads(client: ClientType):
-    client.assets.start = await client.upload_file('assets/start.jpg')
-    client.assets.terms = await client.upload_file('assets/terms.jpg')
-    client.assets.wallet = await client.upload_file('assets/wallet.jpg')
-    client.assets.balance = await client.upload_file('assets/balance.jpg')
-    client.assets.leaderboard = await client.upload_file('assets/leaderboard.jpg')
-    client.assets.tokenomics = await client.upload_file('assets/tokenomics.jpg')
+    asyncio.gather(
+        client.upload_file('assets/start.jpg'),
+        client.upload_file('assets/terms.jpg'),
+        client.upload_file('assets/wallet.jpg'),
+        client.upload_file('assets/balance.jpg'),
+        client.upload_file('assets/leaderboard.jpg'),
+        client.upload_file('assets/tokenomics.jpg')
+    )
 
     client.subscribe_channels = [
         await client.get_entity(i)
@@ -62,7 +65,6 @@ if __name__ == '__main__':
 
     with client:
         client.loop.run_until_complete(client.uploads(client))
-        client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
-        # client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
+        # client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
+        client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
         client.run_until_disconnected()
-
