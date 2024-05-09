@@ -179,7 +179,7 @@ async def _start(client: ClientType, user_entity: types.User):
         logger.info(f"Created new user: {uform.toJSON()}")
 
     await client.send_message(user_entity, 
-                              client.lang.get_phrase_by_key(user_entity, 'start'), 
+                              client.lang.get_phrase_by_key(user_entity, 'welcome'), 
                               file=client.assets.start,
                               buttons=views.main(user_entity))
 

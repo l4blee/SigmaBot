@@ -2,7 +2,7 @@ import asyncio
 import logging
 import os
 from dataclasses import dataclass, field
-from typing import Any, Sequence
+from typing import Any, Sequence, Type
 
 import pymongo
 from motor import motor_asyncio
@@ -62,20 +62,28 @@ class DBUserShort:
     language: str
 
 
-class Database(motor_asyncio.AsyncIOMotorClient):
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
+class Database(pymongo.MongoClient):
+    def __init__(self, host: str | Sequence[str] | None = None, port: int | None = None, document_class: type | None = None, tz_aware: bool | None = None, connect: bool | None = None, type_registry: TypeRegistry | None = None, **kwargs: Any) -> None:
+        super().__init__(host, port, document_class, tz_aware, connect, type_registry, **kwargs)
+
         logger.info('Initialized MongoDB connection')
 
         self.userlist = self.users.list
-        self.admins: dict[str, int] = {}
+        self.admins: dict[str, int] = {i['username']:i['id'] for i in self.users.admins.find()}
         self.tasks = self.users.tasks
         self.referals = self.users.referals
 
         logger.info('Admin IDs parsed, proceeding ...')
+    # def __init__(self, *args: Any, **kwargs: Any) -> None:
+    #     super().__init__(*args, **kwargs)
+    #     logger.info('Initialized MongoDB connection')
 
-    async def parse_adm(self):
-        self.admins = {i['username']:i['id'] async for i in self.users.admins.find()}
+    #     self.userlist = self.users.list
+    #     self.admins: dict[str, int] = {i['username']:i['id'] for i in self.users.admins.find()}
+    #     self.tasks = self.users.tasks
+    #     self.referals = self.users.referals
+
+    #     logger.info('Admin IDs parsed, proceeding ...')
 
 
 database = Database(os.getenv('MONGO_URL'))
