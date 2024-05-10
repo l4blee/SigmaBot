@@ -1,8 +1,6 @@
-import json
 import hjson
 import pathlib
 
-from telethon.types import User
 from database import DBUser
 
 AVAILABLE_LANGUAGES = [i.stem for i in  pathlib.Path('languages/').glob('*.hjson')]
@@ -19,23 +17,22 @@ class LanguageHandler:
 
         self.data = data
 
-    def get_language(self, user_entity: User) -> str:
-        user = DBUser.fromUserEntity(user_entity)  # Lang is always defined in DBUser
-        if user is None:
-            return user_entity.lang_code if user_entity.lang_code in AVAILABLE_LANGUAGES else 'ru'
+    def get_language(self, db_user: DBUser) -> str:  # Lang is always defined in DBUser
+        if db_user is None:
+            return 'ru'
         
-        return user.language
+        return db_user.language
 
-    def get_key_by_phrase(self, user_entity: User, phrase: str) -> str:
-        lang = self.get_language(user_entity)
+    def get_key_by_phrase(self, db_user: DBUser, phrase: str) -> str:
+        lang = self.get_language(db_user)
         for key, val in self.data[lang].items():
             if val == phrase:
                 return key
 
         return None
 
-    def get_phrase_by_key(self, user_entity: User, phrase: str) -> str:
-        return self.data[self.get_language(user_entity)].get(phrase, '')
+    def get_phrase_by_key(self, db_user: DBUser, phrase: str) -> str:
+        return self.data[self.get_language(db_user)].get(phrase, '')
 
 
 lang_handler = LanguageHandler('languages/')
