@@ -24,7 +24,7 @@ async def upload_asset(client: ClientType, path: str):
 
 
 async def uploads(client: ClientType):
-    # await client.db.parse_adm()
+    await client.db.parse_adm()
 
     asyncio.gather(
         upload_asset(client, 'start'),
@@ -47,7 +47,6 @@ def init() -> ClientType:
     client.assets = SimpleNamespace()
     client.db = database
     client.lang = lang_handler
-    client.uploads = uploads
 
     logger.info('Telegram client initialized and database attached, starting...')
     client = client.start(bot_token=os.getenv('BOT_TOKEN'))
@@ -56,8 +55,8 @@ def init() -> ClientType:
 
 
 async def notify_admin(client: ClientType, message: str):
-    for _id in client.db.admins.values():
-        await client.send_message(await client.get_entity(_id), message)
+    coroutines = [client.send_message(await client.get_entity(_id), message) for _id in client.db.admins.values()]
+    await asyncio.gather(*coroutines)
 
 
 if __name__ == '__main__':
@@ -69,8 +68,8 @@ if __name__ == '__main__':
             client.add_event_handler(val)
 
     with client:
-        client.loop.run_until_complete(client.uploads(client))
-        client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
-        # client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
+        client.loop.run_until_complete(uploads(client))
+        # client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
+        client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
         client.run_until_disconnected()
 

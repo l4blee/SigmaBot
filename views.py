@@ -3,14 +3,14 @@ from telethon import Button
 from telethon.types import User
 
 from language import lang_handler
-from database import database
+from database import DBUser, database
 
 class View:
     def __init__(self, *buttons: str, ignore_adm: bool = False) -> None:
         self.phrases = buttons
         self.ignore_adm = ignore_adm
 
-    def __call__(self, user_entity: User, ignore_adm: bool = False, ignore: list[str] = []) -> list[Button]:
+    def __call__(self, db_user: DBUser, ignore_adm: bool = False, ignore: list[str] = []) -> list[Button]:
         if any([i is None for i in self.phrases]):
             return Button.clear()
         
@@ -23,10 +23,10 @@ class View:
                 markup.append(temp)
                 temp = []
             else:
-                temp.append(Button.text(lang_handler.get_phrase_by_key(user_entity, i), resize=True))
+                temp.append(Button.text(lang_handler.get_phrase_by_key(db_user, i), resize=True))
         markup.append(temp)
 
-        if user_entity.id in database.admins.values() and not self.ignore_adm and\
+        if db_user is not None and db_user.id in database.admins.values() and not self.ignore_adm and\
                 not ignore_adm: # Админская(-ие) кнопка(-и), хендлится отдельно
             markup.append([Button.text('Админ панель', resize=True)])
 
@@ -37,9 +37,9 @@ class InlineView:
     def __init__(self, *buttons: tuple[str, str]) -> None:
         self.phrases = buttons
 
-    def __call__(self, user_entity: User) -> list[Button]:
+    def __call__(self, db_user: DBUser) -> list[Button]:
         return [
-            [Button.inline(lang_handler.get_phrase_by_key(user_entity, key), data)]
+            [Button.inline(lang_handler.get_phrase_by_key(db_user, key), data)]
             for key, data in self.phrases
         ]
 
@@ -61,13 +61,18 @@ LANGUAGES = {
     'English🇺🇸': 'lang_en'
 }
 langs = [Button.inline(text, data) for text, data in LANGUAGES.items()]
+
+
+def channels(db_user: DBUser):
+    return [[Button.url(lang_handler.get_phrase_by_key(db_user, text), 
+                        url)]
+                        for text, url 
+                        in zip(['sub_channel_1', 'sub_channel_2'], 
+                                os.getenv('SUB_CHANNELS').split(','))
+            ]
+
+
 awards = InlineView(('awards', 'awards'))
-channels = lambda user: [[Button.url(lang_handler.get_phrase_by_key(user, text), 
-                                    url)]
-                                    for text, url 
-                                    in zip(['sub_channel_1', 'sub_channel_2'], 
-                                           os.getenv('SUB_CHANNELS').split(','))
-                        ]
 info = InlineView(('tokenomics', 'tokenomics'), ('contacts', 'contacts'), 
                   ('social_networks', 'social_networks'), ('user_agreement', 'user_agreement'))
 
