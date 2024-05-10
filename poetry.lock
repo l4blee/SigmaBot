@@ -62,7 +62,7 @@ python-versions = ">=3.8"
 
 [[package]]
 name = "pymongo"
-version = "4.7.0"
+version = "4.7.2"
 description = "Python driver for MongoDB <http://www.mongodb.org>"
 category = "main"
 optional = false
@@ -120,7 +120,7 @@ cryptg = ["cryptg"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "cf1eab398e2e87accf4803ee58dbade025a6e1aa6cf8b4195b53fa65616c0050"
+content-hash = "1ac78e0fbb60fd57f114904aa59686c70441924703f3732d01e8fae9f8f980a1"
 
 [metadata.files]
 dnspython = []
