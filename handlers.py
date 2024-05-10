@@ -1,4 +1,5 @@
 import os
+import datetime
 import asyncio
 import logging
 import traceback
@@ -15,6 +16,7 @@ FLAG_EMOJIS = {
     'ru': '🇷🇺',
     'en': '🇺🇸'
 }
+
 logger = logging.getLogger('handlers')
 
 @events.register(events.CallbackQuery())
@@ -116,6 +118,7 @@ async def _handle_command(event: events.NewMessage.Event):
                 'referal': user_entity.id,  # Who is a referal
                 'referrer': int(ref[0][1:])  # Whose link was used
             })
+            
     if not await _has_joined(client, user_entity):
         await client.send_message(user_entity,
                                   client.lang.get_phrase_by_key(user_entity, 'check_channel'),
@@ -123,16 +126,14 @@ async def _handle_command(event: events.NewMessage.Event):
         return
     
     # No images here
-    if text == 'Админ панель' and user_entity.id in client.db.admins.values():
-        await _admin_panel(client, user_entity)
-        return
-    
-    if text == 'Массовая рассылка' and user_entity.id in client.db.admins.values():
-        await _admin_spam(client, user_entity)
-        return
-    
-    if text == 'Проверить задания' and user_entity.id in client.db.admins.values():
-        await _check_tasks(client, user_entity)
+    ADMIN_CMDS = {
+        'Админ панель': _admin_panel,
+        'Массовая рассылка': _admin_spam,
+        'Проверить задания': _check_tasks,
+        'Метрики': _metrics
+    }
+    if text in ADMIN_CMDS.keys() and user_entity.id in client.db.admins.values():
+        await ADMIN_CMDS[text](client, user_entity)
         return
     
     if text.startswith('/start'):
@@ -175,6 +176,9 @@ async def _start(client: ClientType, user_entity: types.User):
                        user_entity.username, 
                        user_entity.lang_code if user_entity.lang_code in AVAILABLE_LANGUAGES else 'ru')
         client.db.userlist.insert_one(uform.toJSON())
+        client.db.metrics.update_one({'date': datetime.date.today().strftime('%d-%m-%Y')}, 
+                                     {'$inc': {'new_users': 1}}, 
+                                     upsert=True)
         logger.info(f"Created new user: {uform.toJSON()}")
 
     await client.send_message(user_entity, 
@@ -196,6 +200,9 @@ async def _append_ref(client: ClientType, user_entity: types.User):
     client.db.userlist.update_one({'id': ref_id}, 
                                   {'$push': {'referals': user_entity.id}})
     client.db.referals.delete_one({'referal': user_entity.id})
+    client.db.metrics.update_one({'date': datetime.date.today().strftime('%d-%m-%Y')}, 
+                                 {'$inc': {'referals': 1}}, 
+                                 upsert=True)
     referral = await client.get_entity(ref_id)
     await client.send_message(
         referral,
@@ -351,6 +358,9 @@ async def _handle_snetwork(client: ClientType, user_entity: types.User, social_n
             client.db.tasks.update_one({'id': user_entity.id},
                                        {'$push': {'pending': [social_network, link]}},
                                        upsert=True)
+            client.db.metrics.update_one({'date': datetime.date.today().strftime('%d-%m-%Y')}, 
+                                         {'$inc': {'tasks_done': 1}}, 
+                                         upsert=True)
 
             await conv.send_message(client.lang.get_phrase_by_key(user_entity, 'sn_accepted'), buttons=views.main(user_entity))
     except asyncio.exceptions.TimeoutError:
@@ -493,3 +503,22 @@ async def _check_tasks(client: ClientType, user_entity: types.User):
         await client.send_message(user_entity, 'Задания закончились!', buttons=views.main(user_entity))
     
     client.db.tasks.delete_many({'pending.0': {'$exists': False}})
+
+
+async def _metrics(client: ClientType, user_entity: types.User):
+    data = client.db.metrics.find_one({'date': datetime.date.today().strftime('%d-%m-%Y')})
+    users_total = client.db.userlist.count_documents({})
+    tasks_pending = client.db.tasks.count_documents({})
+
+    if not data:
+        await client.send_message(user_entity, 'Недостаточно данных за текущий день.', buttons=views.main(user_entity))
+        return
+    
+    response = [
+        f'**Всего пользователей**: {users_total} 👥',
+        f'**Новых пользователей сегодня**: {data.get("new_users")} 👤',
+        f'**Из них рефералов**: {data.get("referals", 0)} 🫂',
+        f'**Сегодня выполнено заданий**: {data.get("tasks_done", 0)} 📝',
+        f'**Ждёт проверки**: {tasks_pending} ✍🏼'
+    ]
+    await client.send_message(user_entity, '\n'.join(response), buttons=views.main(user_entity))

@@ -45,7 +45,7 @@ class InlineView:
 
 
 class AdminView:
-    phrases = [['Проверить задания'], ['Массовая рассылка']]
+    phrases = [['Проверить задания'], ['Массовая рассылка'], ['Метрики']]
 
     def __call__(self):
         return [[Button.text(j, resize=True) for j in i] for i in self.phrases]
