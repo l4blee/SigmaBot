@@ -452,13 +452,20 @@ async def _check_tasks(client: ClientType, db_user: DBUser):
                     }
                 }
             ])
+
             while (task := await tasks.next()):
-                await conv.send_message(f"[{'Пользователь'}](tg://user?id={task.get('id')})\nСоц. сеть: {task.get('task')[0].capitalize()}\nURL: {task.get('task')[1]}",
-                                        buttons=[Button.inline('Подтвердить', 'ok'),
-                                                 Button.inline('Отклонить', 'deny')])
+                db_rew = await DBUser.fromID(task.get('id'))
+                await conv.send_message(f"[{'Пользователь'}](tg://user?id={task.get('id')}) {FLAG_EMOJIS[db_rew.language]}\nСоц. сеть: {task.get('task')[0].capitalize()}\nURL: {task.get('task')[1]}",
+                                        buttons=[[Button.inline('Подтвердить', 'ok'),
+                                                 Button.inline('Отклонить', 'deny')],
+                                                 [Button.inline('Пропустить', 'skip')]])
                 
                 e = await conv.wait_event(events.CallbackQuery)
                 res = e.data.decode('utf-8')
+                if res == 'skip':
+                    await e.delete()
+                    continue
+
                 if res == 'ok':
                     msg1 = await conv.send_message('Введите награду (в $RLSGM):')
 
@@ -470,14 +477,25 @@ async def _check_tasks(client: ClientType, db_user: DBUser):
                     await client.db.userlist.update_one({'id': task.get('id')},
                                                         {'$inc': {'tasks_balance': int(ans)}})
                     
-                    db_rew = await DBUser.fromID(task.get('id'))
                     await client.send_message(db_rew.id, 
                                               client.lang.get_phrase_by_key(db_rew, 'awards_checked') % {'awarded': int(ans)})
 
-                    await msg1.delete()
-                    await msg2.delete()
                 
-                # Anyways, we remove the task
+                if res == 'deny':
+                    msg1 = await conv.send_message('Укажите причину:')
+
+                    msg2 = await conv.get_response()
+                    ans = msg2.message
+                    if ans == '/start' or client.lang.get_key_by_phrase(db_user, ans) == 'back':
+                        return
+
+                    await client.send_message(db_rew.id,
+                                              client.lang.get_phrase_by_key(db_rew, 'awards_denied') % {'reason': ans})
+                
+                # Anyways, we remove the task and a message to it
+                await e.delete()
+                await msg1.delete()
+                await msg2.delete()
                 cursor = client.db.tasks.aggregate([
                     {
                         '$match': {
@@ -496,8 +514,6 @@ async def _check_tasks(client: ClientType, db_user: DBUser):
                     }
                 ])
                 await cursor.to_list(None)
-
-                await e.delete()
     except asyncio.exceptions.TimeoutError:
         await client.send_message(db_user.id,
                                   client.lang.get_phrase_by_key(db_user, 'time_out'),

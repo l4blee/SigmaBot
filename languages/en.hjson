@@ -166,4 +166,9 @@
     '''
     Congratulations, your assignment has been verified, and %(awarded)s $RLSGM have been credited to your account!
     '''
+    awards_denied:
+    '''
+    Your assignment has been rejected.
+    **Reason:** %(reason)s
+    '''
 }
