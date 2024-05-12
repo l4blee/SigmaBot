@@ -516,8 +516,7 @@ async def _metrics(client: ClientType, db_user: DBUser):
     )
 
     if not data:
-        await client.send_message(db_user.id, 'Недостаточно данных за текущий день.', buttons=views.main(db_user))
-        return
+        data = {'new_users': 0, 'referals': 0, 'tasks_done': 0}
     
     response = [
         f'**Всего пользователей**: {users_total} 👥',
