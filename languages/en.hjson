@@ -20,8 +20,6 @@
     Leaderboard 🏆
 
     %(list)s
-
-    Your position: %(position)s
     '''
     no_wallet: __not linked__
     tokenomics: Tokenomics

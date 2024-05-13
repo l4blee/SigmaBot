@@ -491,7 +491,7 @@ async def _leaderboard(client: ClientType, db_user: DBUser):
     await client.send_message(db_user.id, 
                               client.lang.get_phrase_by_key(db_user, 'leaderboard_msg') % {
                                   'list': '\n'.join(res),
-                                  'position': position
+                                #   'position': position
                               },
                               file=client.assets.leaderboard)
 
