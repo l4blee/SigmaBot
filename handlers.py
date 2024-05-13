@@ -398,7 +398,7 @@ async def _leaderboard(client: ClientType, db_user: DBUser):
                 'id': 1,
                 'username': 1,
                 'total': {
-                    '$add': [ {'$multiply': [{'$size': '$referals'}, 10]}, '$tasks_balance']
+                    '$add': [ {'$multiply': [{'$size': '$referals'}, REF_PAYMENT]}, '$tasks_balance']
                 },
                 'language': 1
             }   
@@ -413,6 +413,70 @@ async def _leaderboard(client: ClientType, db_user: DBUser):
         }
     ])
 
+    user_balance = db_user.tasks_balance + len(db_user.referals) * REF_PAYMENT
+    cur_place = await client.db.userlist.aggregate([
+        {
+            '$lookup': {
+                'from': "admins",
+                'localField': "id",
+                'foreignField': "id",
+                'as': "result",
+                'pipeline': [
+                    {
+                        '$project': {
+                            'id': 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            '$match': {
+                'result': {
+                    '$size': 0
+                }
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'total': {
+                    '$add': [
+                        {
+                            '$multiply': [
+                                {
+                                    '$size': "$referals"
+                                },
+                                10
+                            ]
+                        },
+                        "$tasks_balance"
+                    ]
+                }
+            }
+        },
+        {
+            '$sort': {
+                'total': -1
+            }
+        },
+        {
+            '$match': {
+                'total': {
+                    '$gt': user_balance
+                }
+            }
+        },
+        {
+            '$count': 'res'
+        }
+    ]).to_list(None)
+
+    position = 1 if cur_place == [] else cur_place[0].get('res') + 1
+    if db_user.id in client.db.admins.values():
+        position = '**Вы админ**'
+    
+
     if db_user.id in client.db.admins.values():
         stringify = lambda user: f'[{user.get("username") or "Anonym"}](tg://user?id={user.get("id")}) {FLAG_EMOJIS[user.get("language")]} | {user.get("total")} $RLSGM'
     else:
@@ -425,7 +489,10 @@ async def _leaderboard(client: ClientType, db_user: DBUser):
         index = index + 1
     
     await client.send_message(db_user.id, 
-                              client.lang.get_phrase_by_key(db_user, 'leaderboard') + '\n\n' + '\n'.join(res),
+                              client.lang.get_phrase_by_key(db_user, 'leaderboard_msg') % {
+                                  'list': '\n'.join(res),
+                                  'position': position
+                              },
                               file=client.assets.leaderboard)
 
 

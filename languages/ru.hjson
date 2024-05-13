@@ -15,6 +15,14 @@
     invite: Пригласить друга 👥
     tasks: Задания 📈
     leaderboard: Таблица лидеров 🏆
+    leaderboard_msg: 
+    '''
+    Таблица лидеров 🏆
+
+    %(list)s
+
+    Ваша позиция: %(position)s
+    '''
     no_wallet: __не привязан__
     tokenomics: Токеномика
     contacts: Контакты
