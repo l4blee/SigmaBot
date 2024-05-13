@@ -177,4 +177,6 @@
     Your assignment has been rejected.
     **Reason:** %(reason)s
     '''
+    subscribed: Subscribed ✅
+    not_subscribed: You have not subscribed yet!
 }

@@ -69,7 +69,7 @@ def channels(db_user: DBUser):
                         for text, url 
                         in zip(['sub_channel_1', 'sub_channel_2'], 
                                 os.getenv('SUB_CHANNELS').split(','))
-            ]
+            ] + [[Button.inline(lang_handler.get_phrase_by_key(db_user, 'subscribed'), 'subscribed')]]
 
 
 awards = InlineView(('awards', 'awards'))

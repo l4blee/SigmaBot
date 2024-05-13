@@ -73,6 +73,15 @@ async def on_inline(event: events.CallbackQuery.Event):
             case 'user', 'agreement', *_:
                 await client.send_message(db_user.id,
                                           client.lang.get_phrase_by_key(db_user, 'user_agreement_msg'))
+            case 'subscribed', *_:
+                if await _has_joined(client, event.original_update.user_id):
+                    if db_user is None:
+                        db_user = await _register_user(client, 
+                                                       await client.get_entity(event.peer_id.user_id))
+                    await event.delete()
+                    await _start(client, db_user)
+                else:
+                    await event.answer(client.lang.get_phrase_by_key(db_user, 'not_subscribed'), alert=True)
             case _:
                 return
     except (errors.FilePart0MissingError, errors.FilePartMissingError):
@@ -598,11 +607,51 @@ async def _metrics(client: ClientType, db_user: DBUser):
         client.db.tasks.count_documents({})
     )
 
+    total_balance = await client.db.userlist.aggregate([
+        {
+            '$match': {
+                '$or': [
+                    {'tasks_balance': {'$gt': 0}},
+                    {'referals': {'$ne': []}}
+                ]
+            }
+        },
+        {
+            '$project': {
+                '_id': 0, 
+                'total': {
+                    '$add': [
+                        {
+                            '$multiply': [
+                                {
+                                    '$size': '$referals'
+                                }, 10
+                            ]
+                        }, '$tasks_balance'
+                    ]
+                }
+            }
+        }, 
+        {
+            '$group': {
+                '_id': None, 
+                'total': {
+                    '$sum': '$total'
+                },
+                'users_positive': {
+                    '$count': {}
+                }
+            }
+        }
+    ]).to_list(None)
+    total_balance = total_balance[0]
+
     if not data:
         data = {'new_users': 0, 'referals': 0, 'tasks_done': 0}
     
     response = [
-        f'**Всего пользователей**: {users_total} 👥',
+        f'**Всего пользователей**: {users_total} 👥 (С положительным балансом: {total_balance.get("users_positive")})',
+        f'**Общий баланс:** {total_balance.get("total")} $RLSGM (Avg: {round(total_balance.get("total") / users_total, 2)} $RLSGM)',
         f'**Новых пользователей сегодня**: {data.get("new_users")} 👤',
         f'**Из них рефералов**: {data.get("referals", 0)} 🫂',
         f'**Сегодня выполнено заданий**: {data.get("tasks_done", 0)} 📝',
