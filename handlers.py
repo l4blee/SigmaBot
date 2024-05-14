@@ -77,7 +77,7 @@ async def on_inline(event: events.CallbackQuery.Event):
                 if await _has_joined(client, event.original_update.user_id):
                     if db_user is None:
                         db_user = await _register_user(client, 
-                                                       await client.get_entity(event.peer_id.user_id))
+                                                       await client.get_entity(event.original_update.user_id))
                     await event.delete()
                     await _start(client, db_user)
                 else:
