@@ -601,57 +601,101 @@ async def _check_tasks(client: ClientType, db_user: DBUser):
 
 
 async def _metrics(client: ClientType, db_user: DBUser):
-    data, users_total, tasks_pending = await asyncio.gather(
+    data, tasks_pending = await asyncio.gather(
         client.db.metrics.find_one({'date': datetime.date.today().strftime('%d-%m-%Y')}),
-        client.db.userlist.count_documents({}),
         client.db.tasks.count_documents({})
     )
 
-    total_balance = await client.db.userlist.aggregate([
-        {
-            '$match': {
-                '$or': [
-                    {'tasks_balance': {'$gt': 0}},
-                    {'referals': {'$ne': []}}
-                ]
+    users_total, total_balance = await asyncio.gather(
+        client.db.userlist.aggregate([
+            {
+                '$lookup': {
+                    'from': 'admins', 
+                    'localField': 'id', 
+                    'foreignField': 'id', 
+                    'as': 'adm'
+                }
+            }, 
+            {
+                '$match': {
+                    'adm': {'$size': 0}
+                }
+            },
+            {
+                '$count': 'res'
             }
-        },
-        {
-            '$project': {
-                '_id': 0, 
-                'total': {
-                    '$add': [
+        ]).to_list(None),
+        client.db.userlist.aggregate([
+            {
+                '$lookup': {
+                    'from': 'admins', 
+                    'localField': 'id', 
+                    'foreignField': 'id', 
+                    'as': 'adm'
+                }
+            }, 
+            {
+                '$match': {
+                    '$and': [
                         {
-                            '$multiply': [
+                            'adm': {
+                                '$size': 0
+                            }
+                        }, {
+                            '$or': [
                                 {
-                                    '$size': '$referals'
-                                }, 10
+                                    'tasks_balance': {
+                                        '$gt': 0
+                                    }
+                                }, {
+                                    'referals': {
+                                        '$ne': []
+                                    }
+                                }
                             ]
-                        }, '$tasks_balance'
+                        }
                     ]
                 }
-            }
-        }, 
-        {
-            '$group': {
-                '_id': None, 
-                'total': {
-                    '$sum': '$total'
-                },
-                'users_positive': {
-                    '$count': {}
+            },
+            {
+                '$project': {
+                    '_id': 0, 
+                    'total': {
+                        '$add': [
+                            {
+                                '$multiply': [
+                                    {
+                                        '$size': '$referals'
+                                    }, 10
+                                ]
+                            }, '$tasks_balance'
+                        ]
+                    }
+                }
+            }, 
+            {
+                '$group': {
+                    '_id': None, 
+                    'total': {
+                        '$sum': '$total'
+                    },
+                    'users_positive': {
+                        '$count': {}
+                    }
                 }
             }
-        }
-    ]).to_list(None)
-    total_balance = total_balance[0]
+        ]).to_list(None)
+    )
+
+    users_total = users_total[0].get('res')
+    total_balance, users_positive = total_balance[0].get('total'), total_balance[0].get('users_positive')
 
     if not data:
         data = {'new_users': 0, 'referals': 0, 'tasks_done': 0}
     
     response = [
-        f'**Всего пользователей**: {users_total} 👥 (С положительным балансом: {total_balance.get("users_positive")})',
-        f'**Общий баланс:** {total_balance.get("total")} $RLSGM (Avg: {round(total_balance.get("total") / users_total, 2)} $RLSGM)',
+        f'**Всего пользователей**: {users_total} 👥 (С положительным балансом: {users_positive})',
+        f'**Общий баланс:** {total_balance} $RLSGM (Avg: {round(total_balance / users_total, 2)} $RLSGM)',
         f'**Новых пользователей сегодня**: {data.get("new_users")} 👤',
         f'**Из них рефералов**: {data.get("referals", 0)} 🫂',
         f'**Сегодня выполнено заданий**: {data.get("tasks_done", 0)} 📝',
