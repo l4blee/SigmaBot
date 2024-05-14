@@ -86,6 +86,8 @@ async def on_inline(event: events.CallbackQuery.Event):
                 return
     except (errors.FilePart0MissingError, errors.FilePartMissingError):
         # query is the cmd here, and an image name as well, if required
+        if query == 'subscribed':
+            query = 'start'
         client.assets.__setattr__(query, await client.upload_file(f"assets/{query}.jpg"))
         await on_inline(event)
     except Exception:
