@@ -76,5 +76,6 @@ jobs:
                   -e MONGO_URL=${{ secrets.MONGO_URL }}
                   -e REF_PAYMENT=${{ secrets.REF_PAYMENT }}
                   -e SUB_CHANNELS=${{ secrets.SUB_CHANNELS }}
-                  ${{ github.repository_owner }}/sigmabot:main
+                  --expose 80
                   -p 80:8080
+                  ${{ github.repository_owner }}/sigmabot:main
