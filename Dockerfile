@@ -13,6 +13,7 @@ COPY ./handlers.py /SigmaBot/handlers.py
 COPY ./index.py /SigmaBot/index.py
 COPY ./language.py /SigmaBot/language.py
 COPY ./views.py /SigmaBot/views.py
+COPY ./server.py /SigmaBot/server.py
 
 COPY ./requirements.txt /SigmaBot/requirements.txt
 
