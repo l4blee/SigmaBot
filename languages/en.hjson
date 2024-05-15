@@ -30,6 +30,7 @@
     sn_vk: VK
     sn_telegram: Telegram
     sn_other: Other
+    sn_goose: Golden Goose Tasks
     sn_msg: 
     '''
     Send the link to the publication:
@@ -179,4 +180,8 @@
     '''
     subscribed: Subscribed ✅
     not_subscribed: You have not subscribed yet!
+    goose_msg: Available tasks: 
+    goose_subscribe: "Subcribe"
+    goose_bot: "Start bot"
+    goose_check: Check ✅
 }

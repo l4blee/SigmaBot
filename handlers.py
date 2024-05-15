@@ -12,6 +12,7 @@ from language import AVAILABLE_LANGUAGES
 import views
 
 REF_PAYMENT = int(os.getenv('REF_PAYMENT'))
+_ref_link_template = lambda uid: f'https://t.me/share/url?url=https://t.me/SIGMADropbot?start=ref={uid}'
 FLAG_EMOJIS = {
     'ru': '🇷🇺',
     'en': '🇺🇸'
@@ -64,13 +65,13 @@ async def on_inline(event: events.CallbackQuery.Event):
                 await client.send_message(db_user.id,
                                           client.lang.get_phrase_by_key(db_user, 'tokenomics_msg'),
                                           file=client.assets.tokenomics)
-            case 'social', 'networks', *_:
+            case 'social', 'networks':
                 await client.send_message(db_user.id,
                                           client.lang.get_phrase_by_key(db_user, 'social_networks_msg'))
             case 'contacts', *_:
                 await client.send_message(db_user.id,
                                           client.lang.get_phrase_by_key(db_user, 'contacts_msg'))
-            case 'user', 'agreement', *_:
+            case 'user', 'agreement':
                 await client.send_message(db_user.id,
                                           client.lang.get_phrase_by_key(db_user, 'user_agreement_msg'))
             case 'subscribed', *_:
@@ -82,6 +83,14 @@ async def on_inline(event: events.CallbackQuery.Event):
                     await _start(client, db_user)
                 else:
                     await event.answer(client.lang.get_phrase_by_key(db_user, 'not_subscribed'), alert=True)
+            case 'goose', 'check':
+                try:
+                    await client.get_permissions('https://t.me/GoldenGoose_news', db_user.id)
+                    await client.send_message(db_user.id, 'gz')
+                    flag = True
+                except errors.UserNotParticipantError:
+                    await client.send_message(db_user.id, 'nah')
+                    flag = False
             case _:
                 return
     except (errors.FilePart0MissingError, errors.FilePartMissingError):
@@ -100,15 +109,37 @@ async def on_msg(event: types.Message):
 
     # Check if is referal
     if event.message.message.startswith('/start'):
-        _, *ref = event.message.message.split(' ')
-        if ref != [] and\
-                int(ref[0][1:]) != event.peer_id.user_id and\
+        _, *params_input = event.message.message.split(' ')
+
+        params = {}
+        if params_input:
+            params.update((i.split('=') for i in params_input[0].split('_')))
+        # {'ref': id, *(key:val)}
+        # link is ...?start=key1=val1_key2=val2
+        
+        insert, data = False, {}  # In order to insert user on pending list
+        if params.get('ref') and\
+                params.get('ref') != event.peer_id.user_id and\
                 not await client.db.userlist.find_one({'id': event.peer_id.user_id}): 
             # has ref_id in /start, not self and not registered yet, so IS a ref
-            await client.db.referals.insert_one({
-                'referal': event.peer_id.user_id,  # Who is a referal
-                'referrer': int(ref[0][1:])  # Whose link was used
+            insert = True
+            data.update({
+                'id': event.peer_id.user_id, 
+                'referrer': int(params.get('ref')),
+                'from': 'ref'
             })
+
+        if params.get('from') and\
+                not await client.db.userlist.find_one({'id': event.peer_id.user_id}):
+            # This user is from external partner
+            insert = True
+            data.update({
+                'id': event.peer_id.user_id, 
+                'from': params.get('from')
+            })
+        
+        if insert:
+            await client.db.pending.insert_one(data)
 
     # Check subscriptions
     if not await _has_joined(client, event.peer_id.user_id):
@@ -130,6 +161,7 @@ async def on_msg(event: types.Message):
             for conv in convs:
                 await conv.cancel_all()
 
+        # db_user here is supposed to always be non-null
         await _handle_command(client, event.message.message, db_user)
     except Exception:
         traceback.print_exc()
@@ -165,6 +197,9 @@ async def _handle_command(client: ClientType, text: str, db_user: DBUser):
     try:
         match cmd.split('_'):
             case 'sn', social_network:
+                if social_network == 'goose':
+                    await _handle_goose(client, db_user)
+                    return
                 await _handle_snetwork(client, social_network, db_user)
             case _: # Otherwise
                 await eval(f'_{cmd}')(client, db_user)
@@ -186,14 +221,18 @@ async def _has_joined(client: ClientType, uid: int) -> bool:
     
 
 async def _register_user(client: ClientType, user_entity: types.User):
-    # User is on pending referals list
-    if (db_entry := await client.db.referals.find_one({'referal': user_entity.id})):
+    db_entry = await client.db.pending.find_one({'id': user_entity.id})
+    # {id: uid, referrer: uid, from: where} or None
+    if db_entry:
+        await client.db.pending.delete_one({'id': user_entity.id})
+        # As we gonna handle registration further
+
+    if db_entry and db_entry.get('referrer'): # Then handle ref
         asyncio.gather(
             client.db.userlist.update_one({'id': db_entry.get('referrer')}, 
-                                        {'$push': {'referals': user_entity.id}}),
-            client.db.referals.delete_one({'referal': user_entity.id}),
+                                          {'$push': {'referals': user_entity.id}}),
             client.db.metrics.update_one({'date': datetime.date.today().strftime('%d-%m-%Y')}, 
-                                        {'$inc': {'referals': 1}}, 
+                                         {'$inc': {'referals': 1}}, 
                                         upsert=True)
         )
         ref_db_user = await DBUser.fromID(db_entry.get('referrer'))
@@ -206,7 +245,8 @@ async def _register_user(client: ClientType, user_entity: types.User):
 
     db_user = DBUser(user_entity.id, 
                      user_entity.username, 
-                     user_entity.lang_code if user_entity.lang_code in AVAILABLE_LANGUAGES else 'ru')
+                     user_entity.lang_code if user_entity.lang_code in AVAILABLE_LANGUAGES else 'ru',
+                     from_where=db_entry.get('from', '') if db_entry else '')
         
     await asyncio.gather(
         client.db.userlist.insert_one(db_user.toJSON()),
@@ -241,7 +281,7 @@ async def _balance(client: ClientType, db_user: DBUser):
             [
                 Button.inline(client.lang.get_phrase_by_key(db_user, 'tasks'), data='task'),
                 Button.url(client.lang.get_phrase_by_key(db_user, 'invite'),
-                           url=f'https://t.me/share/url?url=https://t.me/SIGMADropbot?start=r{db_user.id}')
+                           url=_ref_link_template(db_user.id))
             ]
         ],
         file=client.assets.balance
@@ -287,7 +327,7 @@ async def _terms(client: ClientType, db_user: DBUser):
         db_user.id,
         client.lang.get_phrase_by_key(db_user, 'terms_msg'),
         buttons=[Button.url(client.lang.get_phrase_by_key(db_user, 'invite'),
-                            url=f'https://t.me/share/url?url=https://t.me/SIGMADropbot?start=r{db_user.id}')],
+                            url=_ref_link_template(db_user.id))],
         file=client.assets.terms
     )
 
@@ -557,6 +597,8 @@ async def _check_tasks(client: ClientType, db_user: DBUser):
                     
                     await client.send_message(db_rew.id, 
                                               client.lang.get_phrase_by_key(db_rew, 'awards_checked') % {'awarded': int(ans)})
+                    
+                    # TODO: check if from goose
 
                 
                 if res == 'deny':
@@ -704,3 +746,9 @@ async def _metrics(client: ClientType, db_user: DBUser):
         f'**Ждёт проверки**: {tasks_pending} ✍🏼'
     ]
     await client.send_message(db_user.id, '\n'.join(response), buttons=views.main(db_user))
+
+
+async def _handle_goose(client: ClientType, db_user: DBUser):
+    await client.send_message(db_user.id,
+                              client.lang.get_phrase_by_key(db_user, 'goose_msg'),
+                              buttons=views.goose(db_user))

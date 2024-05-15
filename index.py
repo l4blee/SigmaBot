@@ -9,8 +9,10 @@ import os
 from types import SimpleNamespace
 
 from telethon import TelegramClient
+from aiohttp.web import run_app
 
 import handlers
+from server import web_app
 from client import ClientType
 from language import lang_handler
 from database import database
@@ -48,6 +50,9 @@ def init() -> ClientType:
     client.db = database
     client.lang = lang_handler
 
+    web_app.client = client
+    client.web_app = web_app
+
     logger.info('Telegram client initialized and database attached, starting...')
     client = client.start(bot_token=os.getenv('BOT_TOKEN'))
 
@@ -71,5 +76,7 @@ if __name__ == '__main__':
         client.loop.run_until_complete(uploads(client))
         client.loop.run_until_complete(notify_admin(client, 'The bot has started'))
         # client.loop.run_until_complete(client.send_message('l4blee', 'bot started'))
+        run_app(web_app, loop=client.loop)
         client.run_until_disconnected()
+
 

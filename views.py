@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from telethon import Button
 from telethon.types import User
 
@@ -34,13 +35,15 @@ class View:
 
 
 class InlineView:
-    def __init__(self, *buttons: tuple[str, str]) -> None:
+    def __init__(self, *buttons: tuple[str, str, Optional[bool]]) -> None:
         self.phrases = buttons
 
     def __call__(self, db_user: DBUser) -> list[Button]:
         return [
-            [Button.inline(lang_handler.get_phrase_by_key(db_user, key), data)]
-            for key, data in self.phrases
+            [Button.inline(lang_handler.get_phrase_by_key(db_user, i[0]), i[1])] 
+            if len(i) == 2 else 
+            [Button.url(lang_handler.get_phrase_by_key(db_user, i[0]), i[1])]
+            for i in self.phrases
         ]
 
 
@@ -54,7 +57,7 @@ class AdminView:
 clear = View(None)
 main = View('balance', 'wallet', '', 'terms', 'settings', '', 'info')
 settings = View('back', ignore_adm=True)
-tasks = View('sn_insta', 'sn_tiktok', '', 'sn_telegram', 'sn_vk', '', 'sn_other')
+tasks = View('sn_insta', 'sn_tiktok', '', 'sn_telegram', 'sn_vk', '', 'sn_other', '', 'sn_goose')
 
 LANGUAGES = {
     'Русский🇷🇺': 'lang_ru',
@@ -75,5 +78,8 @@ def channels(db_user: DBUser):
 awards = InlineView(('awards', 'awards'))
 info = InlineView(('tokenomics', 'tokenomics'), ('contacts', 'contacts'), 
                   ('social_networks', 'social_networks'), ('user_agreement', 'user_agreement'))
+goose = InlineView(('goose_subscribe', 'https://t.me/GoldenGoose_news', True), 
+                    ('goose_bot', 'https://t.me/GoldenGooses_bot', True),
+                    ('goose_check', 'goose_check'))
 
 admin = AdminView()

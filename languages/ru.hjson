@@ -30,6 +30,7 @@
     sn_vk: VK
     sn_telegram: Telegram
     sn_other: Другое
+    sn_goose: Задания Golden Goose
     sn_msg: 
     '''
     Отправьте ссылку на публикацию:
@@ -179,4 +180,8 @@
     '''
     subscribed: Подписался ✅
     not_subscribed: Вы не подписались!
+    goose_msg: Доступные задания: 
+    goose_subscribe: "Подписаться"
+    goose_bot: "Зайти в бота"
+    goose_check: Проверить ✅
 }

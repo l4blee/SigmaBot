@@ -23,7 +23,9 @@ class DBUser:
     language: str
     wallet: str = ''
     tasks_balance: int = 0
+    tasks_done: int = 0
     referals: list[int] = field(default_factory=list) # list of referals IDs
+    from_where: str = ''
     
     @classmethod
     async def fromID(cls, uid: int):
@@ -41,6 +43,7 @@ class DBUser:
             data.get('language'), 
             data.get('wallet'),
             data.get('tasks_balance'), 
+            data.get('tasks_done'),
             data.get('referals')
         )
 
@@ -51,7 +54,9 @@ class DBUser:
             "language": self.language,
             "wallet": self.wallet,
             "tasks_balance": self.tasks_balance,
-            "referals": self.referals
+            "tasks_done": self.tasks_done,
+            "referals": self.referals,
+            "from_where": self.from_where
         }
 
 
@@ -65,6 +70,7 @@ class Database(motor.motor_asyncio.AsyncIOMotorClient):
         self.tasks = self.users.tasks
         self.referals = self.users.referals
         self.metrics = self.users.metrics
+        self.pending = self.users.pending
 
         logger.info('Admin IDs parsed, proceeding ...')
 
