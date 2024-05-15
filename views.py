@@ -57,7 +57,7 @@ class AdminView:
 clear = View(None)
 main = View('balance', 'wallet', '', 'terms', 'settings', '', 'info')
 settings = View('back', ignore_adm=True)
-tasks = View('sn_insta', 'sn_tiktok', '', 'sn_telegram', 'sn_vk', '', 'sn_other', '', 'sn_goose')
+tasks = View('sn_insta', 'sn_tiktok', '', 'sn_telegram', 'sn_vk', '', 'sn_other', '') #, 'sn_goose')
 
 LANGUAGES = {
     'Русский🇷🇺': 'lang_ru',

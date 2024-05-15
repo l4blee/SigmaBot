@@ -66,7 +66,6 @@ class Database(motor.motor_asyncio.AsyncIOMotorClient):
         self.userlist = self.users.list
         self.admins: dict[str, int] = {}
         self.tasks = self.users.tasks
-        self.referals = self.users.referals
         self.metrics = self.users.metrics
         self.pending = self.users.pending
 
