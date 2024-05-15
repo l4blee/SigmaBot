@@ -78,3 +78,4 @@ jobs:
                   -e REF_PAYMENT=${{ secrets.REF_PAYMENT }}
                   -e SUB_CHANNELS=${{ secrets.SUB_CHANNELS }}
                   ${{ github.repository_owner }}/sigmabot:main
+                  -p 80:8080
