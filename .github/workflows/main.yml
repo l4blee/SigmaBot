@@ -41,7 +41,6 @@ jobs:
     name: Pull image and Run on server
     needs: build
     runs-on: ubuntu-latest
-    environment: nstu_abitur
     steps:
       - name: Pull Docker image locally
         uses: appleboy/ssh-action@v1.0.3
