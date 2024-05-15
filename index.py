@@ -12,7 +12,7 @@ from telethon import TelegramClient
 from aiohttp.web import run_app
 
 import handlers
-from server import web_app
+from aiowebserver import web_app
 from client import ClientType
 from language import lang_handler
 from database import database
