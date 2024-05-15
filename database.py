@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import os
 from dataclasses import dataclass, field
@@ -6,7 +5,6 @@ from typing import Any
 
 import motor
 import motor.motor_asyncio
-from telethon.types import User
 
 logger = logging.getLogger('database')
 
